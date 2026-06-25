@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A premium, interactive Tic-Tac-Toe game featuring a stunning glassmorphism design, player statistics, an unbeatable AI opponent, and online P2P multiplayer using PeerJS.">
+    <title>ChromaToe - Premium Tic-Tac-Toe Game</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- PeerJS for WebRTC Online Multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+    <main class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="app-title">Chroma<span class="highlight">Toe</span></h1>
+            <p class="app-subtitle">Ultimate Tic-Tac-Toe Experience</p>
+        </header>
+
+        <!-- Configuration Card -->
+        <section class="config-card glass-panel" aria-labelledby="config-title">
+            <h2 id="config-title" class="sr-only">Game Configurations</h2>
+            <div class="mode-selection">
+                <button id="btn-pvp" class="mode-btn active" aria-label="Player vs Player Mode">PvP Mode</button>
+                <button id="btn-ai" class="mode-btn" aria-label="Player vs AI Mode">vs AI Mode</button>
+            </div>
+            
+            <!-- PvP Sub-Mode Options (Local vs Online) -->
+            <div id="pvp-submode-wrapper" class="pvp-submode-selection">
+                <button id="btn-pvp-local" class="submode-btn active" aria-label="Local PvP Mode">Local Play</button>
+                <button id="btn-pvp-online" class="submode-btn" aria-label="Online Multiplayer Mode">Online Play</button>
+            </div>
+
+            <!-- Online Connection Panel -->
+            <div id="online-panel" class="online-setup hidden">
+                <div class="status-indicator">
+                    <span class="status-dot offline" id="connection-dot"></span>
+                    <span id="connection-status-text" class="status-text">Disconnected</span>
+                </div>
+                
+                <div class="online-actions">
+                    <div class="host-section">
+                        <button id="btn-host-game" class="online-btn host-btn">Host Game</button>
+                        <div id="room-code-display" class="room-code-box hidden">
+                            <span class="code-label">Room Code:</span>
+                            <span id="display-code" class="code-value">-----</span>
+                            <button id="btn-copy-code" class="copy-btn" aria-label="Copy Room Code">Copy</button>
+                        </div>
+                    </div>
+                    
+                    <div class="divider-text">OR</div>
+                    
+                    <div class="join-section">
+                        <input type="text" id="input-room-code" class="code-input" placeholder="Enter Room Code" maxlength="5" aria-label="Enter Room Code to Join">
+                        <button id="btn-join-game" class="online-btn join-btn">Join Game</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Difficulty Selection -->
+            <div id="difficulty-wrapper" class="difficulty-selection hidden">
+                <label for="ai-difficulty" class="label-text">AI Level:</label>
+                <select id="ai-difficulty" class="difficulty-select" aria-label="Select AI Difficulty">
+                    <option value="easy">Easy (Puppy)</option>
+                    <option value="medium">Medium (Challenger)</option>
+                    <option value="unbeatable" selected>Unbeatable (Minimax)</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Scoreboard -->
+        <section class="scoreboard glass-panel" aria-label="Scoreboard">
+            <div class="score-box" id="score-p1-box">
+                <span class="score-label" id="p1-label">Player 1 (X)</span>
+                <span class="score-value" id="score-p1">0</span>
+            </div>
+            <div class="score-box" id="score-tie-box">
+                <span class="score-label">Ties</span>
+                <span class="score-value" id="score-ties">0</span>
+            </div>
+            <div class="score-box" id="score-p2-box">
+                <span class="score-label" id="p2-label">Player 2 (O)</span>
+                <span class="score-value" id="score-p2">0</span>
+            </div>
+        </section>
+
+        <!-- Turn Indicator -->
+        <div class="turn-indicator glass-panel" id="turn-banner" role="status">
+            <span class="turn-text" id="turn-message">Player <span class="turn-highlight active-x">X</span>'s Turn</span>
+        </div>
+
+        <!-- Game Board Grid -->
+        <section class="game-container" aria-label="Tic-Tac-Toe Game Board">
+            <div class="board" id="game-board">
+                <button class="cell" id="cell-0" data-index="0" aria-label="Square 1"></button>
+                <button class="cell" id="cell-1" data-index="1" aria-label="Square 2"></button>
+                <button class="cell" id="cell-2" data-index="2" aria-label="Square 3"></button>
+                <button class="cell" id="cell-3" data-index="3" aria-label="Square 4"></button>
+                <button class="cell" id="cell-4" data-index="4" aria-label="Square 5"></button>
+                <button class="cell" id="cell-5" data-index="5" aria-label="Square 6"></button>
+                <button class="cell" id="cell-6" data-index="6" aria-label="Square 7"></button>
+                <button class="cell" id="cell-7" data-index="7" aria-label="Square 8"></button>
+                <button class="cell" id="cell-8" data-index="8" aria-label="Square 9"></button>
+            </div>
+        </section>
+
+        <!-- Reset Actions -->
+        <section class="actions-container" aria-label="Game Control Actions">
+            <button id="btn-reset" class="control-btn primary-btn" aria-label="Reset Board">Reset Board</button>
+            <button id="btn-full-reset" class="control-btn secondary-btn" aria-label="Reset Game and Scoreboard">Full Reset</button>
+        </section>
+    </main>
+
+    <!-- Overlay Modal for Win/Tie Notification -->
+    <div id="game-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content glass-panel animated-modal">
+            <h2 id="modal-title" class="modal-heading">Winner!</h2>
+            <p id="modal-desc" class="modal-text">Player X has dominated the round.</p>
+            <button id="btn-modal-close" class="control-btn primary-btn">Play Again</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
